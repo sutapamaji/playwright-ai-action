@@ -94,16 +94,19 @@ jobs:
           npm install --save-dev playwright
           npx playwright install chromium --with-deps
 
-      - name: Debug secrets
+      - name: Resolve LLM API key
+        id: resolve_key
         run: |
-          echo "GROQ key length: ${#GROQ_API_KEY}"
-          echo "LLM_PROVIDER: $LLM_PROVIDER"
-          echo "Runner script exists: $(test -f .playwright-ai-action/action/runner.mjs && echo YES || echo NO)"
-          echo "Providers script exists: $(test -f .playwright-ai-action/action/providers.mjs && echo YES || echo NO)"
-          echo "Config exists: $(test -f playwright-ai.config.json && echo YES || echo NO)"
+          # Pick whichever key is set — LLM_API_KEY wins, then provider-specific keys
+          KEY="${LLM_API_KEY:-${GROQ_API_KEY:-${ANTHROPIC_API_KEY:-${OPENAI_API_KEY:-${AZURE_OPENAI_API_KEY:-}}}}}"
+          echo "::add-mask::$KEY"
+          echo "resolved_key=$KEY" >> $GITHUB_OUTPUT
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          LLM_PROVIDER: ${{ inputs.llm_provider }}
+          LLM_API_KEY:          ${{ secrets.LLM_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY:       ${{ secrets.OPENAI_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
 
       - name: Run AI functional tests
         id: run_tests
@@ -116,11 +119,13 @@ jobs:
           MODEL:                ${{ inputs.llm_model }}
           LLM_BASE_URL:         ${{ inputs.llm_base_url }}
           AZURE_API_VERSION:    ${{ inputs.azure_api_version }}
+          # All provider-specific keys passed directly
           GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
           ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY:       ${{ secrets.OPENAI_API_KEY }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          LLM_API_KEY:          ${{ secrets.LLM_API_KEY }}
+          # LLM_API_KEY resolved from whichever secret is set
+          LLM_API_KEY:          ${{ steps.resolve_key.outputs.resolved_key }}
         run: node .playwright-ai-action/action/runner.mjs
 
       - name: Post results to PR

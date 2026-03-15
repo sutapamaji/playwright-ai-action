@@ -3,7 +3,7 @@
 
   "llm": {
     "provider": "groq",
-    "model": "llama3-70b-8192"
+    "model": "llama3-8b-8192"
   },
 
   "_llm_examples": {
@@ -11,7 +11,7 @@
 
     "groq_free": {
       "provider": "groq",
-      "model": "llama3-70b-8192"
+      "model": "llama3-8b-8192"
     },
     "anthropic": {
       "provider": "anthropic",

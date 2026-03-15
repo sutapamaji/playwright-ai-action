@@ -8,7 +8,7 @@
  * ── LLM configuration (config file wins over env vars) ───────────────────────
  *
  *   In playwright-ai.config.json:
- *     "llm": { "provider": "groq", "model": "llama3-70b-8192", "api_key": "..." }
+ *     "llm": { "provider": "groq", "model": "llama3-8b-8192", "api_key": "..." }
  *
  *   Or via environment variables:
  *     LLM_PROVIDER   groq | anthropic | openai | azure | custom

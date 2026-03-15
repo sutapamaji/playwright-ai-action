@@ -15,7 +15,7 @@ jobs:
 
       # Option A — Groq / Llama 3 (free, no credit card)
       llm_provider: "groq"
-      llm_model: "llama3-70b-8192"
+      llm_model: "llama3-8b-8192"
 
       # Option B — Anthropic Claude
       # llm_provider: "anthropic"

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/sutapamaji/playwright-ai-action/main/schema.json",
+
+  "llm": {
+    "provider": "groq",
+    "model": "llama3-70b-8192"
+  },
+
+  "_llm_examples": {
+    "_note": "Copy one of these blocks to 'llm' above. API keys go in GitHub Secrets, not here.",
+
+    "groq_free": {
+      "provider": "groq",
+      "model": "llama3-70b-8192"
+    },
+    "anthropic": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001"
+    },
+    "openai": {
+      "provider": "openai",
+      "model": "gpt-4o-mini"
+    },
+    "azure_copilot_enterprise": {
+      "provider": "azure",
+      "model": "gpt-4o",
+      "base_url": "https://YOUR-RESOURCE.openai.azure.com"
+    },
+    "ollama_local": {
+      "provider": "ollama",
+      "model": "llama3",
+      "base_url": "http://localhost:11434/v1"
+    },
+    "custom_openai_compatible": {
+      "provider": "custom",
+      "model": "mistral-7b",
+      "base_url": "https://openrouter.ai/api/v1"
+    }
+  },
+
+  "tests": [
+    {
+      "name": "Homepage loads",
+      "instruction": "Verify the page has a visible heading and the body contains meaningful text. Fail if it shows an error page or blank screen."
+    },
+    {
+      "name": "Navigation links are valid",
+      "instruction": "Find all navigation links. Check they have valid href attributes and none are visually broken."
+    },
+    {
+      "name": "Login form validates empty submission",
+      "instruction": "Find a login or sign-in form. Submit it without entering any data and verify a validation message appears.",
+      "selector": "form"
+    },
+    {
+      "name": "Search returns results",
+      "instruction": "Find the search input, type 'test', submit, and verify that results appear.",
+      "expectedText": "result"
+    },
+    {
+      "name": "No broken images",
+      "instruction": "Scan all img elements. Report any that failed to load (naturalWidth of 0 or missing src)."
+    },
+    {
+      "name": "Page is mobile responsive",
+      "instruction": "Check that the page layout does not overflow horizontally at 375px viewport width."
+    }
+  ]
+}

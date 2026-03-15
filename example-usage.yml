@@ -1,0 +1,49 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  ai-functional-tests:
+    uses: sutapamaji/playwright-ai-action/.github/workflows/playwright-ai-test.yml@main
+    with:
+      start_command: "npm start"
+      app_port: "3000"
+
+      # ── Pick ONE provider block below ─────────────────────────────────────
+
+      # Option A — Groq / Llama 3 (free, no credit card)
+      llm_provider: "groq"
+      llm_model: "llama3-70b-8192"
+
+      # Option B — Anthropic Claude
+      # llm_provider: "anthropic"
+      # llm_model: "claude-haiku-4-5-20251001"
+
+      # Option C — OpenAI / ChatGPT
+      # llm_provider: "openai"
+      # llm_model: "gpt-4o-mini"
+
+      # Option D — Azure OpenAI (GitHub Copilot Enterprise)
+      # llm_provider: "azure"
+      # llm_model: "gpt-4o"                   # your deployment name
+      # llm_base_url: "https://YOUR-RESOURCE.openai.azure.com"
+
+      # Option E — Ollama (fully local, no API key, no cost)
+      # llm_provider: "ollama"
+      # llm_model: "llama3"
+      # llm_base_url: "http://localhost:11434/v1"   # default, can omit
+
+      # Option F — Custom / OpenAI-compatible (OpenRouter, LM Studio, vLLM…)
+      # llm_provider: "custom"
+      # llm_model: "mistral-7b-instruct"
+      # llm_base_url: "https://openrouter.ai/api/v1"
+
+    secrets:
+      # Pass whichever key your chosen provider needs — the rest are ignored
+      GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+      ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY:       ${{ secrets.OPENAI_API_KEY }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      LLM_API_KEY:          ${{ secrets.LLM_API_KEY }}    # generic — for custom providers

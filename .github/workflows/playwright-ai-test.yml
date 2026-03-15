@@ -3,7 +3,6 @@ name: 🎭 AI Functional Tests
 on:
   workflow_call:
     inputs:
-      # ── App ──────────────────────────────────────────────────────────────────
       start_command:
         description: "Shell command to start your app (e.g. 'npm start')"
         required: true
@@ -28,10 +27,8 @@ on:
         required: false
         type: string
         default: "20"
-
-      # ── LLM (overridden by config file if llm block is present) ──────────────
       llm_provider:
-        description: "groq | anthropic | openai | azure | custom"
+        description: "groq | anthropic | openai | azure | ollama | custom"
         required: false
         type: string
         default: "groq"
@@ -52,7 +49,6 @@ on:
         default: "2024-02-01"
 
     secrets:
-      # Pass whichever key matches your provider — all are optional
       GROQ_API_KEY:
         required: false
       ANTHROPIC_API_KEY:
@@ -62,7 +58,11 @@ on:
       AZURE_OPENAI_API_KEY:
         required: false
       LLM_API_KEY:
-        required: false   # Generic fallback — use this for custom providers
+        required: false
+
+permissions:
+  issues: write
+  pull-requests: write
 
 jobs:
   ai-functional-tests:
@@ -71,8 +71,14 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Checkout code
+      - name: Checkout app repo
         uses: actions/checkout@v4
+
+      - name: Checkout playwright-ai-action scripts
+        uses: actions/checkout@v4
+        with:
+          repository: sutapamaji/playwright-ai-action
+          path: .playwright-ai-action
 
       - name: Set up Node.js ${{ inputs.node_version }}
         uses: actions/setup-node@v4
@@ -88,34 +94,23 @@ jobs:
           npm install --save-dev playwright
           npx playwright install chromium --with-deps
 
-      - name: Download runner scripts
-        run: |
-          BASE="https://raw.githubusercontent.com/sutapamaji/playwright-ai-action/main/action"
-          curl -sSfL "$BASE/runner.mjs"    -o .ai-runner.mjs
-          curl -sSfL "$BASE/providers.mjs" -o .ai-providers.mjs
-          # Make providers importable as ./providers.mjs from the runner
-          sed -i 's|./providers.mjs|./.ai-providers.mjs|g' .ai-runner.mjs
-
       - name: Run AI functional tests
         id: run_tests
         env:
-          # App
-          START_COMMAND:       ${{ inputs.start_command }}
-          APP_PORT:            ${{ inputs.app_port }}
-          TEST_CONFIG:         ${{ inputs.test_config }}
-          STARTUP_TIMEOUT_MS:  ${{ inputs.startup_timeout_ms }}
-          # LLM (workflow inputs — config file overrides these at runtime)
-          LLM_PROVIDER:        ${{ inputs.llm_provider }}
-          MODEL:               ${{ inputs.llm_model }}
-          LLM_BASE_URL:        ${{ inputs.llm_base_url }}
-          AZURE_API_VERSION:   ${{ inputs.azure_api_version }}
-          # API keys — pass all; runner picks the right one
-          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY }}
-          ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY:      ${{ secrets.OPENAI_API_KEY }}
+          START_COMMAND:        ${{ inputs.start_command }}
+          APP_PORT:             ${{ inputs.app_port }}
+          TEST_CONFIG:          ${{ inputs.test_config }}
+          STARTUP_TIMEOUT_MS:   ${{ inputs.startup_timeout_ms }}
+          LLM_PROVIDER:         ${{ inputs.llm_provider }}
+          MODEL:                ${{ inputs.llm_model }}
+          LLM_BASE_URL:         ${{ inputs.llm_base_url }}
+          AZURE_API_VERSION:    ${{ inputs.azure_api_version }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY:       ${{ secrets.OPENAI_API_KEY }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          LLM_API_KEY:         ${{ secrets.LLM_API_KEY }}
-        run: node .ai-runner.mjs
+          LLM_API_KEY:          ${{ secrets.LLM_API_KEY }}
+        run: node .playwright-ai-action/action/runner.mjs
 
       - name: Post results to PR
         if: always() && github.event_name == 'pull_request'
@@ -128,27 +123,22 @@ jobs:
               const results = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
               const passed  = results.filter(r => r.status === 'pass').length;
               const failed  = results.filter(r => r.status === 'fail').length;
-
               body += failed === 0
                 ? `✅ All **${passed}** tests passed\n\n`
                 : `❌ **${failed} failed** · ${passed} passed\n\n`;
-
               body += '| Test | Status | Summary |\n|---|---|---|\n';
               for (const r of results)
                 body += `| ${r.name} | ${r.status === 'pass' ? '✅' : '❌'} ${r.status} | ${r.notes ?? ''} |\n`;
-
               const details = results
                 .filter(r => r.details)
                 .map(r => `### ${r.name}\n${r.details}`)
                 .join('\n\n');
               if (details)
                 body += `\n<details><summary>Full analysis</summary>\n\n${details}\n</details>`;
-
             } catch {
               body += '⚠️ Could not read test-results.json — check Action logs.';
             }
             body += `\n\n---\n_Powered by [playwright-ai-action](https://github.com/sutapamaji/playwright-ai-action) · provider: \`${{ inputs.llm_provider }}\`_`;
-
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

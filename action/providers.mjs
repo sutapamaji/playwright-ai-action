@@ -16,7 +16,7 @@
 // ── Default models per provider ───────────────────────────────────────────────
 
 export const DEFAULT_MODELS = {
-  groq:      "llama3-8b-8192",
+  groq:      "llama-3.1-8b-instant",
   anthropic: "claude-haiku-4-5-20251001",
   openai:    "gpt-4o-mini",
   azure:     "gpt-4o",           // Azure deployment name — override via MODEL env

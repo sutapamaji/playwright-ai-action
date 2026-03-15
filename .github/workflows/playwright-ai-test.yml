@@ -94,6 +94,17 @@ jobs:
           npm install --save-dev playwright
           npx playwright install chromium --with-deps
 
+      - name: Debug secrets
+        run: |
+          echo "GROQ key length: ${#GROQ_API_KEY}"
+          echo "LLM_PROVIDER: $LLM_PROVIDER"
+          echo "Runner script exists: $(test -f .playwright-ai-action/action/runner.mjs && echo YES || echo NO)"
+          echo "Providers script exists: $(test -f .playwright-ai-action/action/providers.mjs && echo YES || echo NO)"
+          echo "Config exists: $(test -f playwright-ai.config.json && echo YES || echo NO)"
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LLM_PROVIDER: ${{ inputs.llm_provider }}
+
       - name: Run AI functional tests
         id: run_tests
         env:
